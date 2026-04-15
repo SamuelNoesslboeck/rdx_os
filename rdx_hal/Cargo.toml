@@ -1,0 +1,10 @@
+[package]
+name = "rdx_hal"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+lcd_1602_i2c = "0.3.0"
+pwm-pca9685 = "1.0.0"
+syact = { git = "https://github.com/SamuelNoesslboeck/syact" }
+systep = { git = "https://github.com/SamuelNoesslboeck/systep" }
