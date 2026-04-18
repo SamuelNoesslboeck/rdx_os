@@ -20,24 +20,34 @@ pub type RPiStepperCtrl = GenericPulseCtrl<OutputPin, OutputPin>;
 pub type PcaServo = i32;
 pub type PcaDcDriver = PWMDcDriver<PcaPin, PcaPin>;
 
-pub struct RDX {
+#[repr(C)]
+pub struct RdxStepperCtrls(pub RPiStepperCtrl, pub RPiStepperCtrl, pub RPiStepperCtrl, pub RPiStepperCtrl);
+
+#[repr(C)]
+pub struct RdxDcDrivers(pub PcaDcDriver, pub PcaDcDriver, pub PcaDcDriver);
+
+#[repr(C)]
+#[derive(Debug)]
+pub struct RdxIo(pub Pin, pub Pin, pub Pin, pub Pin);
+
+pub struct Rdx {
     // Motors
-    pub step_driver : [RPiStepperCtrl; 4],
-    pub dc_driver : [PcaDcDriver; 3],
+    pub step_driver : RdxStepperCtrls,
+    pub dc_driver : RdxDcDrivers,
     pub fan : PcaDcDriver,
 
     pub pca_ref : Rc<RefCell<Pca9685<rppal::i2c::I2c>>>,
 
     // Plugs
-    pub io1 : [Pin; 4],
-    // pub io2 : [Pin; 4]
+    pub io0 : RdxIo,
+    pub io1 : RdxIo
 }
 
-impl RDX {
+impl Rdx {
     pub fn init() -> Self {
         // Create interfaces
-        let gpio = Gpio::new().unwrap();    // TODO: Add error type
-        let i2c = rppal::i2c::I2c::new().unwrap(); // TODO: Add error type
+        let gpio = Gpio::new().unwrap();            // TODO: Add error type
+        let i2c = rppal::i2c::I2c::new().unwrap();      // TODO: Add error type
         
         // Components
         let mut pca = Pca9685::new(i2c, RDX_PCA9685_ADDR).unwrap();    // TODO: Add error type
@@ -70,6 +80,14 @@ impl RDX {
         }
 
         // IO Plugs
+        let mut io0 : [MaybeUninit::<Pin>; 4] = unsafe { 
+            MaybeUninit::uninit().assume_init()
+        };
+
+        for i in 0 .. 4 {
+            io0[i].write(gpio.get(RDX_PIN_IO0[i]).unwrap());    // TODO: Add error
+        }
+
         let mut io1 : [MaybeUninit::<Pin>; 4] = unsafe { 
             MaybeUninit::uninit().assume_init()
         };
@@ -82,6 +100,7 @@ impl RDX {
         Self {
             step_driver: unsafe { core::mem::transmute(step_driver) },  
             dc_driver: unsafe { core::mem::transmute(dc_driver) },
+            io0: unsafe { core::mem::transmute(io0) },
             io1: unsafe { core::mem::transmute(io1) },
             fan: PcaDcDriver::init(
                 PcaPin::new(pca_ref.clone(), RDX_FAN_CHANNEL[0]), 

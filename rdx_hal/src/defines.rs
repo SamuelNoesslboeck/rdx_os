@@ -40,11 +40,11 @@ use systep::ControllerData;
 /**/
 
 /* GPIO-Connectors */
-    pub const RDX_PIN_IO1 : [u8; 4] = [
+    pub const RDX_PIN_IO0 : [u8; 4] = [
         4, 27, 21, 13
     ];
 
-    pub const RDX_PIN_IO2 : [u8; 4] = [
+    pub const RDX_PIN_IO1 : [u8; 4] = [
         10, 9, 11, 8
     ];
 
