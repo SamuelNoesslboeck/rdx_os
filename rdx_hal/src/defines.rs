@@ -54,8 +54,8 @@ use systep::ControllerData;
 /**/
 
 // I2C
-pub const RDX_LCD_I2C_ADDR : u8 = 0;
-pub const RDX_PCA9685_ADDR : u8 = 0;
+pub const RDX_LCD_I2C_ADDR : u8 = 0x00;
+pub const RDX_PCA9685_ADDR : u8 = 0x40;
 
 // Rotary encoder
 pub const RDX_PIN_ROT_DT : u8 = 0;

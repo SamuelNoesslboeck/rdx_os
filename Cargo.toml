@@ -4,10 +4,12 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-embedded-hal = "1.0.0"
-rppal = { version = "0.22.1", features = ["embedded-hal"] }
-
+systep = { git = "https://github.com/SamuelNoesslboeck/systep" }
 rdx_hal = { path = "./rdx_hal" }
 
 [workspace]
 members = [ "rdx_hal" ]
+
+[[bin]]
+name = "linear_axis"
+path = "bin/linear_axis.rs"

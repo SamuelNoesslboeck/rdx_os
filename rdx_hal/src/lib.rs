@@ -1,7 +1,8 @@
 use core::cell::RefCell;
+use core::mem::MaybeUninit;
 use std::rc::Rc;
 
-use rppal::gpio::{Gpio, OutputPin};
+use rppal::gpio::{Gpio, Pin, OutputPin};
 use pwm_pca9685::Pca9685;
 use syact::PWMDcDriver;
 use systep::GenericPulseCtrl;
@@ -20,12 +21,16 @@ pub type PcaServo = i32;
 pub type PcaDcDriver = PWMDcDriver<PcaPin, PcaPin>;
 
 pub struct RDX {
+    // Motors
     pub step_driver : [RPiStepperCtrl; 4],
-
     pub dc_driver : [PcaDcDriver; 3],
     pub fan : PcaDcDriver,
 
-    pub pca_ref : Rc<RefCell<Pca9685<rppal::i2c::I2c>>>
+    pub pca_ref : Rc<RefCell<Pca9685<rppal::i2c::I2c>>>,
+
+    // Plugs
+    pub io1 : [Pin; 4],
+    // pub io2 : [Pin; 4]
 }
 
 impl RDX {
@@ -40,31 +45,44 @@ impl RDX {
 
         let pca_ref = Rc::new(RefCell::new(pca)); 
 
-        let mut step_driver : Vec<RPiStepperCtrl> = Vec::new();
-
+        let mut step_driver : [MaybeUninit::<RPiStepperCtrl>; 4] = unsafe { 
+            // Initializing this way is safe, as it is not read until it's created
+           MaybeUninit::uninit().assume_init()
+        };
+        
         for i in 0 .. 4 {
-            step_driver.push(RPiStepperCtrl::new(RDX_SC_DATA, 
+            step_driver[i].write(RPiStepperCtrl::new(RDX_SC_DATA, 
                 gpio.get(RDX_PIN_DIR[i]).unwrap().into_output(), 
                 gpio.get(RDX_PIN_STEP[i]).unwrap().into_output()
             ));
         }
 
-        let mut dc_driver : Vec<PcaDcDriver> = Vec::new();
+        let mut dc_driver : [MaybeUninit::<PcaDcDriver>; 3] = unsafe { 
+            MaybeUninit::uninit().assume_init()
+        };
 
         for i in 0 .. 3 {
-            dc_driver.push(
-                PcaDcDriver::init(
-                    PcaPin::new(pca_ref.clone(), RDX_FAN_CHANNEL[i*2]), 
-                    PcaPin::new(pca_ref.clone(), RDX_FAN_CHANNEL[i*2 + 1]), 
-                    RDX_DC_MAX_SPEED
-                ),
-            );
+            dc_driver[i].write(PcaDcDriver::init(
+                PcaPin::new(pca_ref.clone(), RDX_DC_CHANNEL[i*2]), 
+                PcaPin::new(pca_ref.clone(), RDX_DC_CHANNEL[i*2 + 1]), 
+                RDX_DC_MAX_SPEED
+            ));
+        }
+
+        // IO Plugs
+        let mut io1 : [MaybeUninit::<Pin>; 4] = unsafe { 
+            MaybeUninit::uninit().assume_init()
+        };
+
+        for i in 0 .. 4 {
+            io1[i].write(gpio.get(RDX_PIN_IO1[i]).unwrap());    // TODO: Add error
         }
 
         // Creating HAL
         Self {
-            step_driver: unsafe { step_driver.try_into().unwrap_unchecked() },      // Unwrapping safe
-            dc_driver: unsafe { dc_driver.try_into().unwrap_unchecked() },
+            step_driver: unsafe { core::mem::transmute(step_driver) },  
+            dc_driver: unsafe { core::mem::transmute(dc_driver) },
+            io1: unsafe { core::mem::transmute(io1) },
             fan: PcaDcDriver::init(
                 PcaPin::new(pca_ref.clone(), RDX_FAN_CHANNEL[0]), 
                 PcaPin::new(pca_ref.clone(), RDX_FAN_CHANNEL[1]), 
