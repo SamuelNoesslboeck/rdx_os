@@ -1,5 +1,5 @@
 fn main() {
-    let rdx = rdx_hal::Rdx::init();
+    let rdx = rdx_hal::Rdx::init().unwrap();
 
     println!("[RDX - Test]");
     println!("|- IO0");
