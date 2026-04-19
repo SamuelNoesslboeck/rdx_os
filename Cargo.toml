@@ -4,8 +4,9 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-syact = "0.15.0"
+syact = { git = "https://github.com/SamuelNoesslboeck/syact" }
 systep = { git = "https://github.com/SamuelNoesslboeck/systep" }
+
 rdx_hal = { path = "./rdx_hal" }
 
 [workspace]

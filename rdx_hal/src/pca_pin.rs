@@ -3,6 +3,7 @@ use std::rc::Rc;
 
 use pwm_pca9685::{Channel, Pca9685};
 use rppal::i2c::I2c;
+use syact::ActuatorError;
 
 #[derive(Debug)]
 pub enum PcaPinError {
@@ -12,6 +13,12 @@ pub enum PcaPinError {
 impl embedded_hal::pwm::Error for PcaPinError {
     fn kind(&self) -> embedded_hal::pwm::ErrorKind {
         embedded_hal::pwm::ErrorKind::Other
+    }
+}
+
+impl Into<ActuatorError> for PcaPinError {
+    fn into(self) -> ActuatorError {
+        ActuatorError::IOError
     }
 }
 

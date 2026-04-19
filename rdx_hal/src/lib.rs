@@ -4,7 +4,7 @@ use std::rc::Rc;
 
 use rppal::gpio::{Gpio, Pin, OutputPin};
 use pwm_pca9685::Pca9685;
-use syact::PWMDcDriver;
+use syact::PwmDcDriver;
 use systep::GenericPulseCtrl;
 
 use crate::defines::*;
@@ -20,7 +20,7 @@ pub type RPiStepperCtrl = GenericPulseCtrl<OutputPin, OutputPin>;
 /// Servo motor connected to the Pca9685 PWM board
 pub type PcaServo = i32;    // TODO: Add servo type
 /// Dc motor driver connected to the Pca9685 PWM board
-pub type PcaDcDriver = PWMDcDriver<PcaPin, PcaPin>;
+pub type PcaDcDriver = PwmDcDriver<PcaPin, PcaPin>;
 
 #[repr(C)]      // Required for init (Rust could change tuple memory layout)
 pub struct RdxStepperCtrls(pub RPiStepperCtrl, pub RPiStepperCtrl, pub RPiStepperCtrl, pub RPiStepperCtrl);
@@ -101,8 +101,7 @@ impl Rdx {
         for i in 0 .. 3 {
             dc_driver[i].write(PcaDcDriver::init(
                 PcaPin::new(pca_ref.clone(), RDX_DC_CHANNEL[i*2]), 
-                PcaPin::new(pca_ref.clone(), RDX_DC_CHANNEL[i*2 + 1]), 
-                RDX_DC_MAX_SPEED
+                PcaPin::new(pca_ref.clone(), RDX_DC_CHANNEL[i*2 + 1])
             ));
         }
 
@@ -131,8 +130,7 @@ impl Rdx {
             io1: unsafe { core::mem::transmute(io1) },
             fan: PcaDcDriver::init(
                 PcaPin::new(pca_ref.clone(), RDX_FAN_CHANNEL[0]), 
-                PcaPin::new(pca_ref.clone(), RDX_FAN_CHANNEL[1]), 
-                RDX_DC_MAX_SPEED
+                PcaPin::new(pca_ref.clone(), RDX_FAN_CHANNEL[1])
             ),
             pca_ref
         })

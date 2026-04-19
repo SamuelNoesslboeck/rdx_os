@@ -33,10 +33,6 @@ use systep::ControllerData;
         Channel::C8, Channel::C9, Channel::C10, Channel::C11, Channel::C12, Channel::C13
     ];
     pub const RDX_FAN_CHANNEL : [Channel; 2] = [ Channel::C14, Channel::C15 ];
-
-
-    /// Max rad per second for DC-Motor drivers, will probably removed in the future
-    pub const RDX_DC_MAX_SPEED : RadPerSecond = RadPerSecond(500.0);
 /**/
 
 /* GPIO-Connectors */
