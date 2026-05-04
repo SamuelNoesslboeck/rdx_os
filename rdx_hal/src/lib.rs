@@ -2,7 +2,8 @@ use core::cell::RefCell;
 use core::mem::MaybeUninit;
 use std::rc::Rc;
 
-use rppal::gpio::{Gpio, Pin, OutputPin};
+use rotary_encoder_hal::Rotary;
+use rppal::gpio::{Gpio, InputPin, OutputPin, Pin};
 use pwm_pca9685::Pca9685;
 use syact::PwmDcDriver;
 use systep::GenericPulseCtrl;
@@ -50,16 +51,27 @@ pub enum RdxError {
 /// Provides easy access to all components of the RDX by initializing them with the right hardware parameters. The components 
 /// are created in tuple structures, so ownership can be passed as required
 pub struct Rdx {
-    // Motors
-    pub step_driver : RdxStepperCtrls,
-    pub dc_driver : RdxDcDrivers,
-    pub fan : PcaDcDriver,
+    /* Motors */
+        pub step_driver : RdxStepperCtrls,
+        pub dc_driver : RdxDcDrivers,
+        pub fan : PcaDcDriver,
+    /**/
 
-    pub pca_ref : Rc<RefCell<Pca9685<rppal::i2c::I2c>>>,
+    /* Plugs */
+        pub io0 : RdxIo,
+        pub io1 : RdxIo,
 
-    // Plugs
-    pub io0 : RdxIo,
-    pub io1 : RdxIo
+        // TODO: Include misc?
+    /**/
+
+    /* User panel */
+        pub rotary_encoder : Rotary<InputPin, InputPin>, 
+        pub encoder_switch : InputPin, 
+    /**/
+
+    // Initializers
+    gpio : Gpio,
+    pca_ref : Rc<RefCell<Pca9685<rppal::i2c::I2c>>>
 }
 
 impl Rdx {
@@ -105,33 +117,56 @@ impl Rdx {
             ));
         }
 
-        // IO Plugs
-        let mut io0 : [MaybeUninit::<Pin>; 4] = unsafe { 
-            MaybeUninit::uninit().assume_init()
-        };
+        /* Plugs */
+            let mut io0 : [MaybeUninit::<Pin>; 4] = unsafe { 
+                MaybeUninit::uninit().assume_init()
+            };
 
-        for i in 0 .. 4 {
-            io0[i].write(gpio.get(RDX_PIN_IO0[i]).map_err(|err| RdxError::GpioError(err))?);
-        }
+            for i in 0 .. 4 {
+                io0[i].write(gpio.get(RDX_PIN_IO0[i]).map_err(|err| RdxError::GpioError(err))?);
+            }
 
-        let mut io1 : [MaybeUninit::<Pin>; 4] = unsafe { 
-            MaybeUninit::uninit().assume_init()
-        };
+            let mut io1 : [MaybeUninit::<Pin>; 4] = unsafe { 
+                MaybeUninit::uninit().assume_init()
+            };
 
-        for i in 0 .. 4 {
-            io1[i].write(gpio.get(RDX_PIN_IO1[i]).map_err(|err| RdxError::GpioError(err))?);
-        }
+            for i in 0 .. 4 {
+                io1[i].write(gpio.get(RDX_PIN_IO1[i]).map_err(|err| RdxError::GpioError(err))?);
+            }
+        /**/
+
+        /* User panel */
+            let rotary_encoder = Rotary::new(
+                gpio.get(RDX_PIN_ROT_DT)
+                    .map_err(|err| RdxError::GpioError(err))?.into_input(),
+                gpio.get(RDX_PIN_ROT_CL)
+                    .map_err(|err| RdxError::GpioError(err))?.into_input()
+            );
+            let encoder_switch = gpio.get(RDX_PIN_ROT_SW)
+                .map_err(|err| RdxError::GpioError(err))?.into_input();
+        /**/
 
         // Creating HAL
         Ok(Self {
             step_driver: unsafe { core::mem::transmute(step_driver) },  
             dc_driver: unsafe { core::mem::transmute(dc_driver) },
-            io0: unsafe { core::mem::transmute(io0) },
-            io1: unsafe { core::mem::transmute(io1) },
+
             fan: PcaDcDriver::init(
                 PcaPin::new(pca_ref.clone(), RDX_FAN_CHANNEL[0]), 
                 PcaPin::new(pca_ref.clone(), RDX_FAN_CHANNEL[1])
             ),
+
+            /* Plugs */
+                io0: unsafe { core::mem::transmute(io0) },
+                io1: unsafe { core::mem::transmute(io1) },
+            /**/
+
+            /* User panel */
+                rotary_encoder,
+                encoder_switch,
+            /**/    
+
+            gpio,
             pca_ref
         })
     }
