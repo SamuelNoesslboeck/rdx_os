@@ -5,10 +5,12 @@ edition = "2024"
 
 [dependencies]
 embedded-hal = "1.0.0"
-lcd_1602_i2c = "0.3.0"
+lcd-menu = "0.1.0"
+lcd-lcm1602-i2c = { git = "https://github.com/KuabeM/lcd-lcm1602-i2c", rev = "b8b7460" }
 pwm-pca9685 = "1.0.0"
-rotary-encoder-hal = "0.6.0"
+rotary-encoder-embedded = "0.5.0"
 rppal = { version = "0.22.1", features = ["embedded-hal"] }
 
 syact = { git = "https://github.com/SamuelNoesslboeck/syact" }
 systep = { git = "https://github.com/SamuelNoesslboeck/systep" }
+embedded-hal-bus = { version = "0.3.0", features = ["std"] }

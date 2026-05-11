@@ -1,5 +1,4 @@
 use pwm_pca9685::Channel;
-use syact::units::RadPerSecond;
 use systep::ControllerData;
 
 /* Stepper Controller */
@@ -17,22 +16,22 @@ use systep::ControllerData;
     pub const RDX_PIN_SC_EN : u8 = 16;
 
     /// RDX Stepper controller data, all drivers are identical
-    pub const RDX_SC_DATA : ControllerData = ControllerData { 
+    pub const RDX_DATA_SC : ControllerData = ControllerData { 
         max_freq: 50_000.0
     };
 /**/
 
 /* Servos */
-    pub const RDX_SERVO_CHANNEL : [Channel; 8] = [
+    pub const RDX_CHANNEL_SERVO : [Channel; 8] = [
         Channel::C0, Channel::C1, Channel::C2, Channel::C3, Channel::C4, Channel::C5, Channel::C6, Channel::C7
     ];
 /* */
 
 /* DC-Drivers */
-    pub const RDX_DC_CHANNEL : [Channel; 6] = [ 
+    pub const RDX_CHANNEL_DC : [Channel; 6] = [ 
         Channel::C8, Channel::C9, Channel::C10, Channel::C11, Channel::C12, Channel::C13
     ];
-    pub const RDX_FAN_CHANNEL : [Channel; 2] = [ Channel::C14, Channel::C15 ];
+    pub const RDX_CHANNEL_FAN : [Channel; 2] = [ Channel::C14, Channel::C15 ];
 /**/
 
 /* GPIO-Connectors */
@@ -50,10 +49,10 @@ use systep::ControllerData;
 /**/
 
 // I2C
-pub const RDX_LCD_I2C_ADDR : u8 = 0x00;
-pub const RDX_PCA9685_ADDR : u8 = 0x40;
+pub const RDX_I2C_ADDR_LCD : u8 = 0x27;
+pub const RDX_I2C_ADDR_PCA9685 : u8 = 0x40;
 
 // Rotary encoder
-pub const RDX_PIN_ROT_DT : u8 = 0;
-pub const RDX_PIN_ROT_CL : u8 = 0;
-pub const RDX_PIN_ROT_SW : u8 = 0;
+pub const RDX_PIN_ROT_DT : u8 = 18;
+pub const RDX_PIN_ROT_CL : u8 = 17;
+pub const RDX_PIN_ROT_SW : u8 = 19;

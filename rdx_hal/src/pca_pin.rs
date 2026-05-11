@@ -2,7 +2,6 @@ use core::cell::RefCell;
 use std::rc::Rc;
 
 use pwm_pca9685::{Channel, Pca9685};
-use rppal::i2c::I2c;
 use syact::ActuatorError;
 
 #[derive(Debug)]
@@ -23,13 +22,13 @@ impl Into<ActuatorError> for PcaPinError {
 }
 
 #[derive(Debug, Clone)]
-pub struct PcaPin {
+pub struct PcaPin<I2C : embedded_hal::i2c::I2c> {
     channel : Channel,
-    __pca_ref : Rc<RefCell<Pca9685<I2c>>>
+    __pca_ref : Rc<RefCell<Pca9685<I2C>>>
 }
 
-impl PcaPin {
-    pub fn new(__pca_ref : Rc<RefCell<Pca9685<I2c>>>, channel : Channel) -> Self {
+impl<I2C : embedded_hal::i2c::I2c> PcaPin<I2C> {
+    pub fn new(__pca_ref : Rc<RefCell<Pca9685<I2C>>>, channel : Channel) -> Self {
         Self {
             channel, 
             __pca_ref
@@ -37,11 +36,11 @@ impl PcaPin {
     }
 }
 
-impl embedded_hal::pwm::ErrorType for PcaPin {
+impl<I2C : embedded_hal::i2c::I2c> embedded_hal::pwm::ErrorType for PcaPin<I2C> {
     type Error = PcaPinError;
 }
 
-impl embedded_hal::pwm::SetDutyCycle for PcaPin {
+impl<I2C : embedded_hal::i2c::I2c> embedded_hal::pwm::SetDutyCycle for PcaPin<I2C> {
     fn max_duty_cycle(&self) -> u16 {
         4095
     }

@@ -4,18 +4,21 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+lcd-menu = "0.1.0"
+
 syact = { git = "https://github.com/SamuelNoesslboeck/syact" }
 systep = { git = "https://github.com/SamuelNoesslboeck/systep" }
 
 rdx_hal = { path = "./rdx_hal" }
+rppal = { version = "0.22.1", features = ["embedded-hal"] }
 
 [workspace]
 members = [ "rdx_hal" ]
 
-[[bin]]
-name = "linear_axis"
-path = "bin/linear_axis.rs"
+# [[bin]]
+# name = "linear_axis"
+# path = "bin/linear_axis.rs"
 
-[[bin]]
-name = "rdx_test"
-path = "bin/rdx_test.rs"
+# [[bin]]
+# name = "rdx_test"
+# path = "bin/rdx_test.rs"
