@@ -47,6 +47,12 @@ pub struct RdxServos(pub PcaServo, pub PcaServo, pub PcaServo, pub PcaServo, pub
 #[derive(Debug)]
 pub struct RdxIo(pub Pin, pub Pin, pub Pin, pub Pin);
 
+// impl RdxIo {
+//     pub fn into_input_pull_up()
+// }
+
+// pub struct RdxIoInput(pub InputPin, pub InputPin, pub InputPin, pub InputPin);
+
 #[derive(Debug)]
 pub enum RdxError {
     // Interface errors
@@ -85,14 +91,16 @@ impl<'a> LcdDisplay for RdxDisplay<'a> {
 /// are created in tuple structures, so ownership can be passed as required
 pub struct Rdx<'a> {
     /* Motors */
-        pub step_driver : RdxStepperCtrls,
+        pub stepper_driver : RdxStepperCtrls,
         pub dc_driver : RdxDcDrivers<'a>,
         pub fan : PcaDcDriver<'a>,
+
+        pub stepper_enable : OutputPin,
     /**/
 
     /* Plugs */
-        pub io0 : RdxIo,
         pub io1 : RdxIo,
+        pub io2 : RdxIo,
 
         // TODO: Include misc?
     /**/
@@ -134,47 +142,52 @@ impl<'a> Rdx<'a> {
 
         let pca9685 = Rc::new(RefCell::new(pca)); 
 
-        let mut step_driver : [MaybeUninit::<RPiStepperCtrl>; 4] = unsafe { 
-            // Initializing this way is safe, as it is not read until it's created
-           MaybeUninit::uninit().assume_init()
-        };
-        
-        for i in 0 .. 4 {
-            step_driver[i].write(RPiStepperCtrl::new(RDX_DATA_SC, 
-                gpio.get(RDX_PIN_DIR[i])
-                    .map_err(|err| RdxError::GpioError(err))?.into_output(), 
-                gpio.get(RDX_PIN_STEP[i])
-                    .map_err(|err| RdxError::GpioError(err))?.into_output(),
-                Delay::new()
-            ));
-        }
-
-        let mut dc_driver : [MaybeUninit::<PcaDcDriver>; 3] = unsafe { 
+        /* Motors */
+            let mut step_driver : [MaybeUninit::<RPiStepperCtrl>; 4] = unsafe { 
+                // Initializing this way is safe, as it is not read until it's created
             MaybeUninit::uninit().assume_init()
-        };
+            };
+            
+            for i in 0 .. 4 {
+                step_driver[i].write(RPiStepperCtrl::new(RDX_DATA_SC, 
+                    gpio.get(RDX_PIN_DIR[i])
+                        .map_err(|err| RdxError::GpioError(err))?.into_output(), 
+                    gpio.get(RDX_PIN_STEP[i])
+                        .map_err(|err| RdxError::GpioError(err))?.into_output(),
+                    Delay::new()
+                ));
+            }
 
-        for i in 0 .. 3 {
-            dc_driver[i].write(PcaDcDriver::init(
-                PcaPin::new(pca9685.clone(), RDX_CHANNEL_DC[i*2]), 
-                PcaPin::new(pca9685.clone(), RDX_CHANNEL_DC[i*2 + 1])
-            ));
-        }
-
-        /* Plugs */
-            let mut io0 : [MaybeUninit::<Pin>; 4] = unsafe { 
+            let mut dc_driver : [MaybeUninit::<PcaDcDriver>; 3] = unsafe { 
                 MaybeUninit::uninit().assume_init()
             };
 
-            for i in 0 .. 4 {
-                io0[i].write(gpio.get(RDX_PIN_IO0[i]).map_err(|err| RdxError::GpioError(err))?);
+            for i in 0 .. 3 {
+                dc_driver[i].write(PcaDcDriver::init(
+                    PcaPin::new(pca9685.clone(), RDX_CHANNEL_DC[i*2]), 
+                    PcaPin::new(pca9685.clone(), RDX_CHANNEL_DC[i*2 + 1])
+                ));
             }
 
+            let stepper_enable = gpio.get(RDX_PIN_SC_EN)
+                .map_err(|err| RdxError::GpioError(err))?.into_output(); 
+        /* */
+
+        /* Plugs */
             let mut io1 : [MaybeUninit::<Pin>; 4] = unsafe { 
                 MaybeUninit::uninit().assume_init()
             };
 
             for i in 0 .. 4 {
                 io1[i].write(gpio.get(RDX_PIN_IO1[i]).map_err(|err| RdxError::GpioError(err))?);
+            }
+
+            let mut io2 : [MaybeUninit::<Pin>; 4] = unsafe { 
+                MaybeUninit::uninit().assume_init()
+            };
+
+            for i in 0 .. 4 {
+                io2[i].write(gpio.get(RDX_PIN_IO2[i]).map_err(|err| RdxError::GpioError(err))?);
             }
         /**/
 
@@ -203,17 +216,21 @@ impl<'a> Rdx<'a> {
 
         // Creating HAL
         Ok(Self {
-            step_driver: unsafe { core::mem::transmute(step_driver) },  
-            dc_driver: unsafe { core::mem::transmute(dc_driver) },
+            /* Motors */
+                stepper_driver: unsafe { core::mem::transmute(step_driver) },  
+                dc_driver: unsafe { core::mem::transmute(dc_driver) },
 
-            fan: PcaDcDriver::init(
-                PcaPin::new(pca9685.clone(), RDX_CHANNEL_FAN[0]), 
-                PcaPin::new(pca9685.clone(), RDX_CHANNEL_FAN[1])
-            ),
+                fan: PcaDcDriver::init(
+                    PcaPin::new(pca9685.clone(), RDX_CHANNEL_FAN[0]), 
+                    PcaPin::new(pca9685.clone(), RDX_CHANNEL_FAN[1])
+                ),
+
+                stepper_enable,
+            /**/
 
             /* Plugs */
-                io0: unsafe { core::mem::transmute(io0) },
                 io1: unsafe { core::mem::transmute(io1) },
+                io2: unsafe { core::mem::transmute(io2) },
             /**/
 
             /* User panel */

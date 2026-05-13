@@ -13,7 +13,7 @@ use systep::ControllerData;
     ];
 
     /// Pin number of the enable pin for all the stepper controllers
-    pub const RDX_PIN_SC_EN : u8 = 16;
+    pub const RDX_PIN_SC_EN : u8 = 26;      // IS USUALLY 16, CURRENTLY WIRED DIFFERENTLY
 
     /// RDX Stepper controller data, all drivers are identical
     pub const RDX_DATA_SC : ControllerData = ControllerData { 
@@ -35,11 +35,11 @@ use systep::ControllerData;
 /**/
 
 /* GPIO-Connectors */
-    pub const RDX_PIN_IO0 : [u8; 4] = [
+    pub const RDX_PIN_IO1 : [u8; 4] = [
         4, 27, 21, 13
     ];
 
-    pub const RDX_PIN_IO1 : [u8; 4] = [
+    pub const RDX_PIN_IO2 : [u8; 4] = [
         10, 9, 11, 8
     ];
 

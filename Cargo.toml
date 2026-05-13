@@ -2,6 +2,9 @@
 name = "rdx_os"
 version = "0.1.0"
 edition = "2024"
+default-run = "rdx_os"
+authors = [ "Samuel Nösslböck <samuel.noesslboeck@gmail.com>" ]
+license = "MIT"
 
 [dependencies]
 lcd-menu = "0.1.0"
@@ -11,14 +14,16 @@ systep = { git = "https://github.com/SamuelNoesslboeck/systep" }
 
 rdx_hal = { path = "./rdx_hal" }
 rppal = { version = "0.22.1", features = ["embedded-hal"] }
+futures = "0.3.32"
 
 [workspace]
 members = [ "rdx_hal" ]
 
-# [[bin]]
-# name = "linear_axis"
-# path = "bin/linear_axis.rs"
 
-# [[bin]]
-# name = "rdx_test"
-# path = "bin/rdx_test.rs"
+####################
+##  OTHER ROBOTS  ##
+####################
+[[bin]]
+name = "syomat"
+path = "bin/syomat/main.rs"
+
